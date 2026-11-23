@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff9ed">
+  <meta name="description" content="漢字の札を持ったもぐらをタップ。漢検3級・準2級・2級のオリジナル問題で遊べる漢字ゲーム。">
+  <title>漢字もぐらたたき！～めざせ漢字王～</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./questions.js"></script>
+  <script defer src="./game.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-inner">
+      <div class="brand"><span class="stamp" aria-hidden="true">漢</span> 漢字もぐらたたき</div>
+      <div class="volume">
+        <button id="mute" class="icon-button" type="button" aria-label="ミュート" aria-pressed="false" title="ミュート">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="sound-waves" d="M15 9a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12"/><path class="sound-off" d="m16 10 5 5m0-5-5 5"/></svg>
+        </button>
+        <label class="volume-slider"><span>音量</span><input id="volume" type="range" min="0" max="100" value="55" aria-label="音量"></label>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout" id="layout" data-view="title">
+    <section id="title" class="title-panel" aria-labelledby="game-title">
+      <div class="eyebrow"><span aria-hidden="true">✿</span> 遊んで覚える漢字クイズ</div>
+      <h1 id="game-title">漢字<br class="title-break"><span class="title-word">もぐらたたき<span class="title-bang">！</span></span></h1>
+      <p class="subtitle">～ めざせ漢字王 ～</p>
+      <p class="title-instructions">問題に合う漢字の札をクリック・タップ！</p>
+      <form class="setup" id="setup">
+        <fieldset><legend>ゲームモード</legend>
+          <div class="choices">
+            <label><input type="radio" name="mode" value="solo" checked><span>1人プレイ</span></label>
+            <label><input type="radio" name="mode" value="versus"><span>CPU対戦</span></label>
+          </div>
+        </fieldset>
+        <fieldset><legend>難易度</legend>
+          <div class="choices grades">
+            <label><input type="radio" name="grade" value="basic" checked><span><small>初級</small>漢検3級</span></label>
+            <label><input type="radio" name="grade" value="intermediate"><span><small>中級</small>漢検準2級</span></label>
+            <label><input type="radio" name="grade" value="advanced"><span><small>上級</small>漢検2級</span></label>
+          </div>
+        </fieldset>
+        <fieldset id="cpu-settings" hidden><legend>CPUの強さ</legend>
+          <div class="choices">
+            <label><input type="radio" name="cpu" value="easy" checked><span>初級CPU</span></label>
+            <label><input type="radio" name="cpu" value="strong"><span>中上級CPU</span></label>
+          </div>
+        </fieldset>
+        <fieldset><legend>制限時間</legend>
+          <div class="choices">
+            <label><input type="radio" name="duration" value="30"><span>30秒</span></label>
+            <label><input type="radio" name="duration" value="60" checked><span>60秒</span></label>
+            <label><input type="radio" name="duration" value="90"><span>90秒</span></label>
+          </div>
+        </fieldset>
+        <button type="submit" class="primary start"><span aria-hidden="true">▶</span> ゲームスタート</button>
+      </form>
+      <div class="best"><span aria-hidden="true">★</span> <strong id="best-grade">漢検3級</strong>の最高得点 <b id="best-score">0 点</b></div>
+    </section>
+
+    <section class="play-panel" id="play-panel" aria-label="もぐらの広場">
+      <div id="hud" class="hud" hidden>
+        <div class="hud-card player-score"><span>あなた</span><strong id="player-score">0</strong><small>点</small></div>
+        <div class="hud-card timer" id="timer"><span id="time-label">残り時間</span><strong id="time-value">60</strong><small id="time-unit">秒</small></div>
+        <div class="hud-card cpu-score" id="cpu-hud" hidden><span>CPU</span><strong id="cpu-score">0</strong><small>点</small></div>
+      </div>
+      <div class="scene" id="scene">
+        <div class="landscape" aria-hidden="true">
+          <i class="sun"></i><i class="cloud cloud-one"></i><i class="cloud cloud-two"></i>
+          <i class="hill hill-back"></i><i class="hill hill-front"></i><i class="grass"></i>
+          <span class="flower flower-one">✿</span><span class="flower flower-two">✿</span><span class="flower flower-three">✦</span><span class="flower flower-four">✿</span>
+          <span class="scene-petal p-one"></span><span class="scene-petal p-two"></span><span class="scene-petal p-three"></span>
+        </div>
+        <div class="preview-banner" id="preview-banner"><span aria-hidden="true">✿</span> もぐらの広場</div>
+        <div class="question" id="question" hidden>
+          <div class="question-meta"><span id="question-type"></span><span id="question-number"></span></div>
+          <div class="prompt" id="prompt" aria-live="polite"></div>
+          <div class="question-reading" id="question-reading" hidden></div>
+          <div class="question-track" id="question-track" aria-hidden="true"><div id="question-progress"></div></div>
+        </div>
+        <div class="board" id="board" aria-label="3×3のもぐらの穴"></div>
+        <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+        <div class="effects" id="effects" aria-hidden="true"></div>
+        <div id="pause-overlay" class="pause-overlay" hidden>
+          <div class="pause-card">
+            <h2>ひと休み</h2>
+            <button class="primary" id="resume" type="button">ゲームを再開</button>
+          </div>
+        </div>
+      </div>
+      <div class="howto" id="howto">
+        <span class="help-mark" aria-hidden="true">?</span>
+        <div><h2>遊び方</h2><p>正解するか、もぐらが穴に戻ると次の問題へ。<br class="help-break"> CPU対戦では先に正解した側が得点します。</p>
+          <div class="rules"><span class="rule good">正解 ＋10点</span><span class="rule bad">不正解 −5点</span><span class="rule combo">連続正解でコンボ</span></div>
+        </div>
+      </div>
+      <div id="game-controls" class="game-controls" hidden>
+        <button class="secondary" id="pause" type="button">一時停止</button>
+        <button class="secondary" id="exit" type="button">タイトルに戻る</button>
+      </div>
+    </section>
+
+    <section id="result" class="summary" aria-labelledby="result-heading" hidden>
+      <div class="result-ornament" id="result-ornament" aria-hidden="true"></div>
+      <p class="eyebrow" id="result-meta"></p>
+      <h2 id="result-heading" tabindex="-1"></h2>
+      <p id="result-note" class="result-note"></p>
+      <div id="result-stats" class="result-stats"></div>
+      <div class="result-actions">
+        <button id="again" class="primary" type="button">もう一度遊ぶ</button>
+        <button id="show-review" class="secondary" type="button">間違えた漢字を復習する</button>
+        <button id="result-home" class="secondary" type="button">タイトルに戻る</button>
+      </div>
+    </section>
+
+    <section id="review" class="summary" aria-labelledby="review-heading" hidden>
+      <p class="eyebrow">漢字の復習</p>
+      <h2 id="review-heading" tabindex="-1"></h2>
+      <p id="review-intro" class="result-note"></p>
+      <div id="review-entries" class="review-entries"></div>
+      <div class="result-actions">
+        <button id="review-start" class="primary" type="button">間違えた問題に再挑戦</button>
+        <button id="review-back" class="secondary" type="button">結果に戻る</button>
+        <button id="review-home" class="secondary" type="button">タイトルに戻る</button>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">漢字もぐらたたき<span aria-hidden="true"> · </span> 漢検3級・準2級・2級の目安に合わせたオリジナル問題</footer>
+</body>
+</html>
+
